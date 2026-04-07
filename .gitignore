@@ -1,0 +1,13 @@
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.backup
+*.tfstate.lock.info
+.terraform.lock.hcl
+
+# AWS Credentials – NIEMALS in Git!
+*.pem
+.aws/
+
+# System
+.DS_Store

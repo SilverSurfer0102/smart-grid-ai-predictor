@@ -2,14 +2,26 @@
 
 ---
 
-## 🔀 Git – Conventional Commits
-| Prefix | Bedeutung | Beispiel |
-|--------|-----------|---------|
-| `feat:` | Neue Funktion | `feat: add lambda function` |
-| `fix:` | Bugfix | `fix: correct sqs timeout` |
-| `docs:` | Dokumentation | `docs: update README` |
-| `refactor:` | Code umstrukturiert (kein neues Feature) | `refactor: simplify main.tf` |
-| `chore:` | Wartung, keine Logik-Änderung | `chore: update provider version` |
+## 🔀 Git – Befehle & Conventional Commits
+
+### Befehle
+| Befehl | Bedeutung |
+|--------|-----------|
+| `git init` | Neues Git-Projekt starten |
+| `git add .` | Alle geänderten Dateien für Commit vorbereiten |
+| `git commit -m "..."` | Änderungen mit Nachricht abspeichern |
+| `git push` | Lokale Commits zu GitHub hochladen |
+| `git status` | Zeigt welche Dateien geändert wurden |
+| `git log` | Zeigt alle bisherigen Commits |
+
+### Commit-Prefixe
+| Prefix | Bedeutung |
+|--------|-----------|
+| `feat:` | Neue Funktion wurde hinzugefügt |
+| `fix:` | Fehler wurde behoben |
+| `docs:` | Nur Dokumentation geändert |
+| `refactor:` | Code aufgeräumt ohne neue Funktion |
+| `chore:` | Wartungsarbeit im Hintergrund |
 
 
 ---

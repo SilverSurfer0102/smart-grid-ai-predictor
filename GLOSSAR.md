@@ -106,6 +106,17 @@ von der Einrichtung bis zur fertigen Cloud-Infrastruktur.
 | `batch_size` | Wie viele SQS Nachrichten auf einmal | Wir nehmen 1 – eine Nachricht pro Lambda-Aufruf |
 | `invoke` | Lambda manuell aufrufen | Zum Testen ohne SQS – direkt per AWS CLI |
 | `StatusCode 200` | Alles erfolgreich | HTTP-Standard: 200 = OK |
+| `detect_trigger()` | Funktion die erkennt woher Lambda aufgerufen wurde | EventBridge und SQS liefern unterschiedliche JSON-Strukturen – Lambda muss unterscheiden |
+| `event["source"]` | Feld im EventBridge-Event das den Absender angibt | `"aws.scheduler"` = kommt von EventBridge Scheduler |
+| `event["Records"]` | Feld im SQS-Event das die Nachrichten enthält | Existiert nur bei SQS – fehlt bei EventBridge → guter Erkennungstest |
+| `dual-trigger` | Lambda reagiert auf zwei verschiedene Auslöser | Pfad A: automatisch per EventBridge, Pfad B: on-demand per API/SQS |
+| `build_hourly_forecast()` | Berechnet Vorhersage für alle Stunden | Liefert stündliche kW-Werte für 24h, 48h oder 72h Horizont |
+| `forecast_days` | Wie viele Tage Open-Meteo zurückliefert | `1` = nur heute, `3` = 72h Vorhersage für Netzbetreiber |
+| `UTC` | Koordinierte Weltzeit – Referenzzeitzone | Lambda läuft immer in UTC – Ortszeiten müssen manuell berechnet werden |
+| `CEST / CET` | Mitteleuropäische Sommer-/Winterzeit | Nürnberg = UTC+2 im Sommer, UTC+1 im Winter – wichtig für Stunden-Index |
+| `Performance Ratio` | Verhältnis von realer zu theoretischer Solarleistung | Berücksichtigt Wechselrichter-Verluste, Leitungen, Verschmutzung – Richtwert: 0.80 |
+| `NOCT-Modell` | Temperaturkorrektur für Solarmodule | Panels verlieren ~0.4% Effizienz pro Grad über 25°C (Standard IEC 61215) |
+
 
 ---
 
@@ -117,3 +128,35 @@ von der Einrichtung bis zur fertigen Cloud-Infrastruktur.
 | `shortwave_radiation` | Kurzwellige Solarstrahlung in W/m² | Direkter Einflussfaktor auf Solarleistung |
 | `hourly` | Stündliche Vorhersagewerte | Wir greifen auf die aktuelle Stunde zu |
 | `Wirkungsgrad` | Wie viel % der Sonnenstrahlung wird zu Strom | Typische Solarmodule haben ~18% Wirkungsgrad |
+
+---
+
+## 8️⃣ EventBridge – Zeitgesteuerte Automatisierung
+
+| Begriff | Bedeutung | Warum brauchen wir das? |
+|---------|-----------|------------------------|
+| `EventBridge` | AWS-Dienst für ereignisgesteuerte Architektur | Verbindet AWS-Services miteinander – reagiert auf Ereignisse oder Zeitpläne |
+| `EventBridge Scheduler` | Zeitgesteuerter Auslöser für AWS-Services | Weckt Lambda automatisch alle 15 Minuten – kein manuelles Eingreifen nötig |
+| `schedule_expression` | Definiert den Zeitplan als Formel | `rate(15 minutes)` = alle 15 Min., `cron(0 6 * * ? *)` = täglich um 6 Uhr |
+| `rate()` | Einfacher Wiederholungs-Zeitplan | `rate(15 minutes)` – gleichmäßiger Takt ohne Datum/Uhrzeit-Logik |
+| `cron()` | Präziser Zeitplan mit Datum und Uhrzeit | Aus der Unix-Welt – ermöglicht z.B. "jeden Montag um 8:00 Uhr" |
+| `flexible_time_window` | Zeitfenster in dem EventBridge auslösen darf | `OFF` = genau zum Zeitpunkt, `FLEXIBLE` = irgendwann innerhalb eines Fensters |
+| `Push-basierter Trigger` | EventBridge schickt aktiv ein Event zu Lambda | Lambda wartet passiv – wie eine Türklingel die jemand drückt |
+| `Pull-basierter Trigger` | Lambda holt sich aktiv Nachrichten aus SQS | Lambda schaut regelmäßig in die Queue – wie ein Briefkasten der geleert wird |
+
+---
+
+## 🔟 Solarenergie – Fachbegriffe
+
+| Begriff | Bedeutung | Warum brauchen wir das? |
+|---------|-----------|------------------------|
+| `kWp` | Kilowatt-Peak – Nennleistung einer Solaranlage | Gibt die maximale Leistung unter Idealbedingungen an (1000 W/m², 25°C) |
+| `kW` | Kilowatt – aktuelle Leistung zu einem Zeitpunkt | Was die Anlage gerade produziert – schwankt mit Wetter und Uhrzeit |
+| `kWh` | Kilowattstunde – produzierte Energie über Zeit | kW × Stunden = kWh, z.B. 1 kW × 4h = 4 kWh |
+| `W/m²` | Watt pro Quadratmeter – Einheit der Sonnenstrahlung | Je höher, desto mehr Strom produziert das Panel |
+| `Einspeiseprognose` | Vorhersage wie viel Strom ins Netz fließt | Netzbetreiber brauchen das um Reservekraftwerke zu steuern |
+| `Wechselrichter` | Wandelt Gleichstrom (DC) der Panels in Wechselstrom (AC) | Verliert ~3-5% der Energie – Teil des Performance Ratio |
+| `Systemwirkungsgrad` | Gesamteffizienz der Anlage inkl. aller Verluste | Modul-Wirkungsgrad × Performance Ratio = reale Ausbeute |
+| `IEC 61215` | Internationale Norm für Solarmodule | Definiert Testbedingungen und Temperaturkoeffizienten – Grundlage unserer Formel |
+| `IEC 61724` | Norm für Messung und Auswertung von Solaranlagen | Definiert den Performance Ratio – unser PR = 0.80 basiert darauf |
+| `STC` | Standard Test Conditions – Referenzbedingungen | 1000 W/m² Strahlung, 25°C – unter diesen Bedingungen wird kWp gemessen |

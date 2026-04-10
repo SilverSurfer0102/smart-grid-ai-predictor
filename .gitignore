@@ -11,3 +11,7 @@
 
 # System
 .DS_Store
+
+# Automatisch generierte Dateien
+src/lambda/handler.zip
+terraform/response.json

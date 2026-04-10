@@ -39,3 +39,8 @@ output "lambda_function_arn" {
   description = "ARN der Lambda Funktion"
   value       = aws_lambda_function.energy_processor.arn
 }
+
+output "api_endpoint" {
+  description = "URL des API Gateway Endpunkts"
+  value       = "${aws_apigatewayv2_stage.sensor_api.invoke_url}/sensor"
+}

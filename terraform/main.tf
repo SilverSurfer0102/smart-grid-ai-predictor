@@ -221,3 +221,85 @@ resource "aws_lambda_event_source_mapping" "sqs_trigger" {
   function_name    = aws_lambda_function.energy_processor.arn
   batch_size       = 1
 }
+
+
+# ============================================================
+# API GATEWAY: Die offizielle Eingangstür
+# ============================================================
+# HTTP API ist günstiger und einfacher als REST API.
+# Für unser Projekt völlig ausreichend.
+# ============================================================
+
+resource "aws_apigatewayv2_api" "sensor_api" {
+  name          = "${var.project_name}-sensor-api-${var.environment}"
+  protocol_type = "HTTP"
+
+  cors_configuration {
+    allow_origins = ["*"]
+    allow_methods = ["POST", "GET"]
+    allow_headers = ["Content-Type"]
+  }
+}
+
+# Stage: Eine "Umgebung" innerhalb der API
+# Analogie: Wie ein Stockwerk im Gebäude – wir nutzen "dev"
+resource "aws_apigatewayv2_stage" "sensor_api" {
+  api_id      = aws_apigatewayv2_api.sensor_api.id
+  name        = var.environment
+  auto_deploy = true
+}
+
+# IAM Role damit API Gateway in SQS schreiben darf
+resource "aws_iam_role" "api_gateway_role" {
+  name = "${var.project_name}-api-gateway-role-${var.environment}"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action    = "sts:AssumeRole"
+      Effect    = "Allow"
+      Principal = {
+        Service = "apigateway.amazonaws.com"
+      }
+    }]
+  })
+}
+
+# API Gateway darf SQS Nachrichten schicken
+resource "aws_iam_role_policy" "api_gateway_sqs" {
+  name = "${var.project_name}-api-gateway-sqs-policy"
+  role = aws_iam_role.api_gateway_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect   = "Allow"
+      Action   = "sqs:SendMessage"
+      Resource = aws_sqs_queue.energy_data.arn
+    }]
+  })
+}
+
+# Integration: API Gateway → SQS direkt
+# Kein Lambda dazwischen – direkt ins Förderband
+resource "aws_apigatewayv2_integration" "sqs_integration" {
+  api_id             = aws_apigatewayv2_api.sensor_api.id
+  integration_type   = "AWS_PROXY"
+  integration_subtype = "SQS-SendMessage"
+  credentials_arn    = aws_iam_role.api_gateway_role.arn
+
+  request_parameters = {
+    "QueueUrl"    = aws_sqs_queue.energy_data.url
+    "MessageBody" = "$request.body"
+  }
+
+  payload_format_version = "1.0"
+}
+
+# Route: Welcher URL-Pfad löst was aus?
+# POST /sensor → SQS Integration
+resource "aws_apigatewayv2_route" "sensor_route" {
+  api_id    = aws_apigatewayv2_api.sensor_api.id
+  route_key = "POST /sensor"
+  target    = "integrations/${aws_apigatewayv2_integration.sqs_integration.id}"
+}

@@ -66,6 +66,12 @@ von der Einrichtung bis zur fertigen Cloud-Infrastruktur.
 | `DLQ` | Dead Letter Queue – Auffangbecken für Fehler | Nachrichten die 3x fehlschlagen landen hier statt verloren zu gehen |
 | `Lambda` | Serverlose Funktion | Verarbeitet Nachrichten aus SQS – läuft nur wenn Arbeit da ist |
 | `CloudWatch` | Logging-Service von AWS | Speichert alle Ausgaben von Lambda – unverzichtbar für Debugging |
+| `API Gateway` | Offizielle HTTP-Eingangstür für unser System | Damit externe Sensoren per HTTP Daten schicken können |
+| `HTTP API` | Günstigste API Gateway Variante | Reicht für unser Projekt – einfacher als REST API |
+| `Stage` | Eine Umgebung innerhalb der API | Wir nutzen "dev" – später könnte "prod" dazukommen |
+| `Route` | Welcher URL-Pfad löst welche Aktion aus | POST /sensor → Nachricht in SQS schreiben |
+| `CORS` | Erlaubt Anfragen von anderen Domains | Damit unser Frontend später die API aufrufen darf |
+
 
 ---
 

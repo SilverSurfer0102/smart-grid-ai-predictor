@@ -28,3 +28,14 @@ output "sqs_dlq_url" {
   description = "URL der Dead Letter Queue"
   value       = aws_sqs_queue.energy_data_dlq.url
 }
+
+
+output "lambda_function_name" {
+  description = "Name der Lambda Funktion"
+  value       = aws_lambda_function.energy_processor.function_name
+}
+
+output "lambda_function_arn" {
+  description = "ARN der Lambda Funktion"
+  value       = aws_lambda_function.energy_processor.arn
+}

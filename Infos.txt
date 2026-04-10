@@ -1,0 +1,8 @@
+Für Git
+feat:     → neue Funktion
+fix:      → Bugfix
+docs:     → Dokumentation
+refactor: → Code umstrukturiert
+chore:    → Wartungsarbeiten
+
+Was genau war nochmal SQS, S3 und CloudWatch? Was macht Lambda Funktion? Was ist ein SQS Queue? Was ist ein S3 Bucket?

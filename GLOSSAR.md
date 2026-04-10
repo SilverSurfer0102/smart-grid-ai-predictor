@@ -42,6 +42,15 @@
 | `Lambda` | Serverlose Funktion – läuft nur wenn gebraucht | Arbeiter der nur kommt wenn Arbeit da ist |
 | `Free Tier` | Kostenloses AWS-Kontingent pro Monat | Freiminuten beim Handyvertrag |
 
+## 🔐 IAM – Erweiterte Begriffe
+| Begriff | Bedeutung |
+|---------|-----------|
+| `IAM Role` | Temporärer Ausweis für AWS-Services |
+| `Trust Policy` | Wer darf diese Role benutzen? |
+| `Policy` | Liste von Erlaubnissen |
+| `arn:aws:iam::aws:policy/...` | Fertige AWS-Policies die man direkt benutzen kann |
+| `CloudWatch` | AWS Logging-Service – wie ein Tagebuch für deine App | 
+
 ---
 
 ## 🏗️ Terraform – Begriffe

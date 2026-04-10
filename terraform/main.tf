@@ -100,3 +100,124 @@ resource "aws_sqs_queue" "energy_data" {
     maxReceiveCount     = 3
   })
 }
+
+
+# ============================================================
+# IAM ROLE: Der Werksausweis für Lambda
+# ============================================================
+# WARUM eine extra Role?
+# Lambda ist ein AWS-Service – er kann nicht einfach auf andere
+# Services zugreifen. Er braucht eine explizite Erlaubnis.
+# Analogie: Auch der beste Mitarbeiter kommt ohne Ausweis
+# nicht durch die Sicherheitsschleuse.
+# ============================================================
+
+resource "aws_iam_role" "lambda_role" {
+  name = "${var.project_name}-lambda-role-${var.environment}"
+
+  # Trust Policy: Wer darf diese Role überhaupt annehmen?
+  # Nur Lambda-Functions – kein anderer Service!
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "lambda.amazonaws.com"
+        }
+      }
+    ]
+  })
+}
+
+# Berechtigung 1: Lambda darf Logs in CloudWatch schreiben
+# (Ohne das sehen wir keine Fehlermeldungen!)
+resource "aws_iam_role_policy_attachment" "lambda_logs" {
+  role       = aws_iam_role.lambda_role.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+}
+
+# Berechtigung 2: Lambda darf SQS Nachrichten lesen
+resource "aws_iam_role_policy" "lambda_sqs" {
+  name = "${var.project_name}-lambda-sqs-policy"
+  role = aws_iam_role.lambda_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "sqs:ReceiveMessage",
+          "sqs:DeleteMessage",
+          "sqs:GetQueueAttributes"
+        ]
+        Resource = aws_sqs_queue.energy_data.arn
+      }
+    ]
+  })
+}
+
+# Berechtigung 3: Lambda darf in S3 schreiben
+resource "aws_iam_role_policy" "lambda_s3" {
+  name = "${var.project_name}-lambda-s3-policy"
+  role = aws_iam_role.lambda_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "s3:PutObject",
+          "s3:GetObject"
+        ]
+        Resource = "${aws_s3_bucket.energy_data.arn}/*"
+      }
+    ]
+  })
+}
+
+# ============================================================
+# LAMBDA FUNKTION: Der Arbeiter am Förderband
+# ============================================================
+# Terraform zippt den Python-Code automatisch und lädt
+# ihn zu AWS hoch – kein manuelles Zippen nötig!
+# ============================================================
+
+data "archive_file" "lambda_zip" {
+  type        = "zip"
+  source_file = "${path.module}/../src/lambda/handler.py"
+  output_path = "${path.module}/../src/lambda/handler.zip"
+}
+
+resource "aws_lambda_function" "energy_processor" {
+  filename         = data.archive_file.lambda_zip.output_path
+  function_name    = "${var.project_name}-energy-processor-${var.environment}"
+  role             = aws_iam_role.lambda_role.arn
+  handler          = "handler.lambda_handler"
+  runtime          = "python3.11"
+  timeout          = 30
+  source_code_hash = data.archive_file.lambda_zip.output_base64sha256
+
+  environment {
+    variables = {
+      BUCKET_NAME = aws_s3_bucket.energy_data.bucket
+      ENVIRONMENT = var.environment
+    }
+  }
+}
+
+# ============================================================
+# SQS → LAMBDA TRIGGER
+# ============================================================
+# Das ist die "Klingel" – wenn eine SQS Nachricht ankommt,
+# wird Lambda automatisch geweckt.
+# ============================================================
+
+resource "aws_lambda_event_source_mapping" "sqs_trigger" {
+  event_source_arn = aws_sqs_queue.energy_data.arn
+  function_name    = aws_lambda_function.energy_processor.arn
+  batch_size       = 1
+}

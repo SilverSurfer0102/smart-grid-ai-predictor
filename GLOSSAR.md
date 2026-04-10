@@ -19,6 +19,30 @@ von der Einrichtung bis zur fertigen Cloud-Infrastruktur.
 
 ## 2️⃣ Git – Versionskontrolle
 
+### Git vs. GitHub – der Unterschied
+
+| Begriff | Was ist es? | Wo es lebt | Braucht Internet | Analogie |
+|---------|-------------|-----------|-----------------|---------|
+| `Git` | Versionskontroll-Software – verfolgt alle Änderungen an deinen Dateien | Auf deinem Laptop | Nein | Dein Tagebuch auf dem Schreibtisch |
+| `GitHub` | Cloud-Plattform die Git-Repositories hostet und visualisiert | In der Cloud | Ja | Kopie des Tagebuchs im Copyshop |
+| `Repository (Repo)` | Ein Projektordner den Git überwacht – enthält alle Dateien und die komplette Änderungshistorie | Lokal und/oder GitHub | – | Das Tagebuch selbst |
+| `git push` | Befehl der lokale Commits zu GitHub hochlädt | Verbindet beide | Ja | Kopie im Copyshop aktualisieren |
+| `git pull` | Befehl der neueste Änderungen von GitHub herunterlädt | Verbindet beide | Ja | Neueste Kopie vom Copyshop holen |
+
+
+### Git Workflow – Schritt für Schritt
+
+| Schritt | Befehl | Wann benutzen? | Analogie |
+|---------|--------|----------------|---------|
+| 1 – Projekt starten | `git init` | Einmalig am Anfang | Tagebuch aufschlagen und beschriften |
+| 2 – Überblick verschaffen | `git status` | Immer als erstes – bevor alles anderen | Blick in den Spiegel bevor man rausgeht |
+| 3 – Dateien vormerken | `git add datei.md` | Nach jeder sinnvollen Änderung | Blatt in den Briefumschlag legen |
+| 4 – Schnappschuss machen | `git commit -m "..."` | Nach git add – mit klarer Nachricht | Umschlag versiegeln und beschriften |
+| 5 – Zu GitHub hochladen | `git push` | Nach dem Commit | Brief in den Briefkasten werfen |
+| 6 – Fehler rückgängig | `git rm --cached datei.md` | Wenn eine Datei nicht getrackt werden soll | Blatt wieder aus dem Umschlag nehmen |
+
+
+
 ### Befehle
 | Befehl | Bedeutung | Warum brauchen wir das? |
 |--------|-----------|------------------------|

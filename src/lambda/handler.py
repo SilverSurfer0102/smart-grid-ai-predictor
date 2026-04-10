@@ -20,7 +20,7 @@ def fetch_weather_data():
     """
     url = (
         "https://api.open-meteo.com/v1/forecast"
-        "?latitude=48.14&longitude=11.58"
+        "?latitude=49.45&longitude=11.08"
         "&hourly=temperature_2m,windspeed_10m,shortwave_radiation"
         "&forecast_days=1"
         "&timezone=Europe/Berlin"
@@ -33,7 +33,7 @@ def fetch_weather_data():
     current_hour = datetime.now().hour
     return {
         "timestamp": datetime.now(timezone.utc).isoformat(),
-        "location": "München (48.14N, 11.58E)",
+        "location": "Nürnberrg (49.45N, 11.08E)",
         "temperature_c": data["hourly"]["temperature_2m"][current_hour],
         "windspeed_kmh": data["hourly"]["windspeed_10m"][current_hour],
         "solar_radiation_wm2": data["hourly"]["shortwave_radiation"][current_hour],

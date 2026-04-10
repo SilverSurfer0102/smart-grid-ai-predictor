@@ -44,3 +44,8 @@ output "api_endpoint" {
   description = "URL des API Gateway Endpunkts"
   value       = "${aws_apigatewayv2_stage.sensor_api.invoke_url}/sensor"
 }
+
+output "eventbridge_schedule_name" {
+  description = "Name des EventBridge Schedulers"
+  value       = aws_scheduler_schedule.solar_forecast.name
+}

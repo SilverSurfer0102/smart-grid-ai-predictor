@@ -303,3 +303,55 @@ resource "aws_apigatewayv2_route" "sensor_route" {
   route_key = "POST /sensor"
   target    = "integrations/${aws_apigatewayv2_integration.sqs_integration.id}"
 }
+
+# ── EventBridge Scheduler ──────────────────────────────────────────────────
+# IAM Role: Erlaubnis für EventBridge, Lambda aufzurufen
+resource "aws_iam_role" "eventbridge_role" {
+  name = "smart-grid-eventbridge-role-${var.environment}"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect    = "Allow"
+      Principal = { Service = "scheduler.amazonaws.com" }
+      Action    = "sts:AssumeRole"
+    }]
+  })
+}
+
+resource "aws_iam_role_policy" "eventbridge_lambda_invoke" {
+  name = "smart-grid-eventbridge-invoke-policy"
+  role = aws_iam_role.eventbridge_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect   = "Allow"
+      Action   = "lambda:InvokeFunction"
+      Resource = aws_lambda_function.energy_processor.arn
+    }]
+  })
+}
+
+# Der Scheduler selbst – klopft alle 15 Minuten bei Lambda an
+resource "aws_scheduler_schedule" "solar_forecast" {
+  name                         = "smart-grid-solar-forecast-${var.environment}"
+  schedule_expression          = "rate(15 minutes)"
+  schedule_expression_timezone = "Europe/Berlin"
+
+  flexible_time_window {
+    mode = "OFF"  # Genau zum Zeitpunkt auslösen, kein Spielraum
+  }
+
+  target {
+    arn      = aws_lambda_function.energy_processor.arn
+    role_arn = aws_iam_role.eventbridge_role.arn
+
+    input = jsonencode({
+      source      = "aws.scheduler"
+      detail-type = "Scheduled Event"
+      detail      = { trigger = "solar_forecast_15min" }
+    })
+  }
+}
+

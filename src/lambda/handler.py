@@ -11,6 +11,7 @@ BUCKET_NAME = os.environ["BUCKET_NAME"]
 DEFAULT_LAT  = 49.45
 DEFAULT_LON  = 11.08
 DEFAULT_CITY = "Nuremberg"
+PERFORMANCE_RATIO = 0.80  # Systemwirkungsgrad (IEC 61724): Wechselrichter, Leitungen, Verschmutzung
 
 
 # ── Trigger-Erkennung ─────────────────────────────────────────
@@ -117,7 +118,7 @@ def predict_solar_output(temperature_c: float,
     # Windkühlung (hoher Wind kühlt Panel → leicht mehr Leistung)
     wind_bonus = 1 + min(0.05, windspeed_kmh * 0.001)
 
-    return round(base_output_kw * temp_derating * wind_bonus, 3)
+    return round(base_output_kw * temp_derating * wind_bonus * PERFORMANCE_RATIO, 3)
 
 
 def build_hourly_forecast(weather: dict, panel_kwp: float = 10.0) -> list:
